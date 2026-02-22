@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { RefreshCw, CalendarCheck } from "lucide-react";
+import { CalendarCheck } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+import AppHeader from "@/components/AppHeader";
 
 type PlanChunk = {
   title: string;
@@ -40,29 +41,14 @@ export default function PlanPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <CalendarCheck color="var(--accent-color)" size={32} />
-          <h1 className="page-title">Plan</h1>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          {data && (
-            <span
-              style={{
-                fontSize: "0.85rem",
-                color: "var(--text-muted)",
-                fontWeight: 500,
-              }}
-            >
-              Updated {format(data.lastModified, "MMM d, h:mm a")}
-            </span>
-          )}
-          <button className="btn-icon" onClick={fetchPlan} title="Refresh">
-            <RefreshCw size={20} />
-          </button>
-        </div>
-      </div>
+      <AppHeader
+        title="Plan"
+        icon={<CalendarCheck size={32} />}
+        onRefresh={fetchPlan}
+        lastUpdated={
+          data ? format(data.lastModified, "MMM d, h:mm a") : undefined
+        }
+      />
 
       {loading && !data ? (
         <div className="empty-state">Loading plan...</div>

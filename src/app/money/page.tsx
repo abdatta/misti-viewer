@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
-import { RefreshCw, Receipt, ChevronLeft, ChevronRight } from "lucide-react";
+import { Receipt, ChevronLeft, ChevronRight } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+import AppHeader from "@/components/AppHeader";
 
 type MoneyEntry = {
   date: string;
@@ -77,16 +78,11 @@ export default function MoneyPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Receipt color="var(--accent-color)" size={32} />
-          <h1 className="page-title">Money</h1>
-        </div>
-
-        <button className="btn-icon" onClick={handleRefresh} title="Refresh">
-          <RefreshCw size={20} />
-        </button>
-      </div>
+      <AppHeader
+        title="Money"
+        icon={<Receipt size={32} />}
+        onRefresh={handleRefresh}
+      />
 
       <div className="date-selector-container">
         <button

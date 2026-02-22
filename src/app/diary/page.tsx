@@ -2,14 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
-import {
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw,
-  BookOpen,
-  Clock,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Clock } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+import AppHeader from "@/components/AppHeader";
 
 type Chunk = {
   timeLabel: string;
@@ -90,16 +85,11 @@ export default function DiaryPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <BookOpen color="var(--accent-color)" size={32} />
-          <h1 className="page-title">Diary</h1>
-        </div>
-
-        <button className="btn-icon" onClick={handleRefresh} title="Refresh">
-          <RefreshCw size={20} />
-        </button>
-      </div>
+      <AppHeader
+        title="Diary"
+        icon={<BookOpen size={32} />}
+        onRefresh={handleRefresh}
+      />
 
       <div className="date-selector-container">
         <button

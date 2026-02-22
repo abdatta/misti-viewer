@@ -85,7 +85,7 @@ button {
 .container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 0 24px 100px 24px; /* added bottom padding to clear the nav bar */
+  padding: 32px 24px 100px 24px; /* top, right, bottom (to clear nav), left */
 }
 
 /* Nav Bar */
@@ -96,12 +96,12 @@ button {
   left: 50%;
   transform: translateX(-50%);
   z-index: 50;
-  background: var(--card-bg);
+  background: white;
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-subtle);
   border-radius: 100px;
-  padding: 12px 28px;
+  padding: 16px 36px;
   box-shadow:
     0 10px 40px rgba(0, 0, 0, 0.08),
     var(--glass-shadow);
@@ -113,7 +113,7 @@ button {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 32px;
+  gap: 48px;
 }
 
 .nav-link {
@@ -157,17 +157,62 @@ button {
     var(--glass-shadow);
 }
 
-.page-header {
+.app-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 32px;
+  gap: 16px;
+}
+
+.app-header-main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  flex-wrap: wrap; /* in case of tight screens */
+  gap: 12px;
 }
 
-.page-title {
+.app-header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-header-icon {
+  color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-header-title {
   font-size: 2.2rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.app-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-header-status-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.status-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(45, 42, 38, 0.04);
+  padding: 6px 12px;
+  border-radius: 100px;
+  letter-spacing: 0.02em;
 }
 
 /* Typography styles inside Markdown */
@@ -273,13 +318,15 @@ button {
   appearance: none;
   background: transparent;
   border: none;
-  padding: 8px 32px 8px 8px;
+  padding: 8px 16px;
   font-family: var(--font-base);
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-main);
   cursor: pointer;
   transition: var(--transition-smooth);
+  text-align: center;
+  text-align-last: center;
 }
 
 .select-pretty:focus {
@@ -289,20 +336,6 @@ button {
 .select-wrapper {
   position: relative;
   display: inline-block;
-}
-
-.select-wrapper::after {
-  content: "";
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid var(--text-muted);
-  pointer-events: none;
 }
 
 .btn-icon {
