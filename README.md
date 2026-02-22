@@ -46,19 +46,12 @@ A delightful, LA soft-vibe viewer dashboard built to read and interact with the 
    ```
 
    **Configuring the Port:**
-   By default, the app runs on port 3000. You can configure the port using the `PORT` environment variable.
-
-   The easiest way is to add it to your `.env` file:
-
-   ```env
-   PORT=8080
-   ```
-
-   Alternatively, you can pass it at runtime:
+   By default, the app runs on port 3000. You can configure the port by passing it at runtime:
    - **Windows (PowerShell):** `$env:PORT=8080; npm run start`
+     _(for dev: `$env:PORT=8080; npm run dev`)_
    - **Mac/Linux:** `PORT=8080 npm run start`
 
-   Or pass the port argument directly to the start script:
+   Or pass the port argument directly to the script:
 
    ```bash
    npm run start -- -p 8080
