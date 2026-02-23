@@ -1,44 +1,63 @@
 import { NextResponse } from "next/server";
-import { readFileContent } from "@/lib/sim-reader";
+import { getAllEvents } from "@/lib/sim-reader";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const fileData = readFileContent("runtime", "INBOX.md");
+  const allEvents = getAllEvents();
 
-  if (!fileData) {
-    return NextResponse.json({ error: "Inbox not found" }, { status: 404 });
+  if (!allEvents || allEvents.length === 0) {
+    return NextResponse.json({ items: [] });
   }
 
-  const content = fileData.content;
-  const lines = content.split(/\r?\n/);
+  const items: any[] = [];
+  let latestModified = 0;
 
-  const items: string[] = [];
-  let currentItem: string[] = [];
-
-  for (const line of lines) {
-    // Check if line starts a new bullet point
-    const bulletMatch = line.match(/^[-*]\s+(.*)/);
-
-    if (bulletMatch) {
-      if (currentItem.length > 0) {
-        items.push(currentItem.join("\n").trim());
+  for (const event of allEvents) {
+    const timestamp = event.timestamp_iso;
+    if (timestamp) {
+      const timestampMs = new Date(timestamp).getTime();
+      if (timestampMs > latestModified) {
+        latestModified = timestampMs;
       }
-      // Start a new item (without the leading bullet so we can style it ourselves if we want, or let markdown handle it)
-      // Actually, keep the bullet so MarkdownRenderer formats it natively if it contains nested stuff. Or just use the content.
-      // Let's just use the content and let it render as paragraph text inside the card.
-      currentItem = [bulletMatch[1]];
-    } else if (currentItem.length > 0) {
-      currentItem.push(line);
+    }
+
+    if (event.inbound && Array.isArray(event.inbound)) {
+      for (const item of event.inbound) {
+        if (item.type !== "other") {
+          items.push({
+            direction: "inbound",
+            type: item.type,
+            contact: item.from || "Unknown",
+            content: item.content || "",
+            timestamp: timestamp,
+          });
+        }
+      }
+    }
+
+    if (event.outbound && Array.isArray(event.outbound)) {
+      for (const item of event.outbound) {
+        if (item.type !== "other") {
+          items.push({
+            direction: "outbound",
+            type: item.type,
+            contact: item.to || "Unknown",
+            content: item.content || "",
+            timestamp: timestamp,
+          });
+        }
+      }
     }
   }
 
-  if (currentItem.length > 0) {
-    items.push(currentItem.join("\n").trim());
-  }
+  // Sort descending by timestamp (newest first)
+  items.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
 
   return NextResponse.json({
-    lastModified: fileData.lastModified,
+    lastModified: latestModified || Date.now(),
     items: items,
   });
 }

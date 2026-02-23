@@ -62,3 +62,67 @@ export function readFileContent(
     return null;
   }
 }
+
+export function getAllEvents(): any[] {
+  try {
+    const root = getSimRoot();
+    const eventsPath = path.join(root, "events");
+
+    if (!fs.existsSync(eventsPath)) {
+      return [];
+    }
+
+    const dateFolders = fs.readdirSync(eventsPath).filter((f) => {
+      const fullPath = path.join(eventsPath, f);
+      return (
+        fs.statSync(fullPath).isDirectory() && /^\d{4}-\d{2}-\d{2}$/.test(f)
+      );
+    });
+
+    const allEvents: any[] = [];
+    const { jsonrepair } = require("jsonrepair"); // dynamically require to avoid top-level issues if not installed
+
+    for (const dateFolder of dateFolders) {
+      const folderPath = path.join(eventsPath, dateFolder);
+      const files = fs
+        .readdirSync(folderPath)
+        .filter((f) => f.endsWith(".json"));
+
+      for (const file of files) {
+        try {
+          const filePath = path.join(folderPath, file);
+          let content = fs.readFileSync(filePath, "utf-8");
+          let eventData;
+          try {
+            eventData = JSON.parse(content);
+          } catch (parseError) {
+            console.log(
+              `Failed to parse ${filePath} normally. Attempting repair with jsonrepair...`,
+            );
+            try {
+              const repaired = jsonrepair(content);
+              eventData = JSON.parse(repaired);
+              console.log(`Successfully repaired JSON for ${filePath}`);
+            } catch (repairError) {
+              console.error(
+                `Error parsing even after jsonrepair for ${filePath}:`,
+                repairError,
+              );
+              continue; // Skip this file if repair fails
+            }
+          }
+          if (eventData) {
+            allEvents.push(eventData);
+          }
+        } catch (e) {
+          console.error(`Error reading event file ${dateFolder}/${file}:`, e);
+        }
+      }
+    }
+
+    return allEvents;
+  } catch (error) {
+    console.error("Error reading events:", error);
+    return [];
+  }
+}
