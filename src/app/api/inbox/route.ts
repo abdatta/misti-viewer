@@ -22,29 +22,16 @@ export async function GET() {
       }
     }
 
-    if (event.inbound && Array.isArray(event.inbound)) {
-      for (const item of event.inbound) {
+    if (event.exchanges && Array.isArray(event.exchanges)) {
+      for (const item of event.exchanges) {
         if (item.type !== "other") {
           items.push({
-            direction: "inbound",
+            direction: item.direction === "in" ? "inbound" : "outbound",
             type: item.type,
-            contact: item.from || "Unknown",
-            content: item.content || "",
+            contact: item.party,
+            content: item.content,
             timestamp: timestamp,
-          });
-        }
-      }
-    }
-
-    if (event.outbound && Array.isArray(event.outbound)) {
-      for (const item of event.outbound) {
-        if (item.type !== "other") {
-          items.push({
-            direction: "outbound",
-            type: item.type,
-            contact: item.to || "Unknown",
-            content: item.content || "",
-            timestamp: timestamp,
+            timeLocal: item.time_local,
           });
         }
       }
@@ -52,9 +39,26 @@ export async function GET() {
   }
 
   // Sort descending by timestamp (newest first)
-  items.sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-  );
+  items.sort((a, b) => {
+    const diff =
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    if (diff !== 0) return diff;
+
+    const parseTime = (t: string) => {
+      if (!t) return 0;
+      const match = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!match) return 0;
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const isPM = match[3].toUpperCase() === "PM";
+      if (h === 12) h = isPM ? 12 : 0;
+      else if (isPM) h += 12;
+      return h * 60 + m;
+    };
+
+    // Secondary sort descending by parsed timeLocal
+    return parseTime(b.timeLocal) - parseTime(a.timeLocal);
+  });
 
   return NextResponse.json({
     lastModified: latestModified || Date.now(),

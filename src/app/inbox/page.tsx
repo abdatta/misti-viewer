@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
+  ArrowRight,
 } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import AppHeader from "@/components/AppHeader";
@@ -18,6 +19,7 @@ type InboxItem = {
   contact: string;
   content: string;
   timestamp: string;
+  timeLocal: string;
 };
 
 type InboxData = {
@@ -213,7 +215,17 @@ export default function InboxPage() {
                       }}
                     >
                       <ArrowUpRight size={18} />
-                      <span>{item.contact}</span>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        <span>You</span>
+                        <ArrowRight size={14} />
+                        <span>{item.contact}</span>
+                      </span>
                     </div>
                   )}
                   <span
@@ -239,9 +251,7 @@ export default function InboxPage() {
                     fontWeight: 500,
                   }}
                 >
-                  {item.timestamp
-                    ? format(new Date(item.timestamp), "h:mm a")
-                    : ""}
+                  {item.timeLocal}
                 </div>
               </div>
               <MarkdownRenderer content={item.content} />
