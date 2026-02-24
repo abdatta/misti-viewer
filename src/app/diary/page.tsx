@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isToday, isYesterday } from "date-fns";
 import { ChevronLeft, ChevronRight, BookOpen, Clock } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import AppHeader from "@/components/AppHeader";
@@ -108,11 +108,18 @@ export default function DiaryPage() {
             disabled={dates.length === 0}
           >
             {dates.length === 0 && <option value="">No dates available</option>}
-            {dates.map((date) => (
-              <option key={date} value={date}>
-                {format(parseISO(date), "EEEE, MMM d, yyyy")}
-              </option>
-            ))}
+            {dates.map((date) => {
+              const d = parseISO(date);
+              return (
+                <option key={date} value={date}>
+                  {isToday(d)
+                    ? "Today"
+                    : isYesterday(d)
+                      ? "Yesterday"
+                      : format(d, "EEEE, MMM d, yyyy")}
+                </option>
+              );
+            })}
           </select>
         </div>
 

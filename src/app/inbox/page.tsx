@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isToday, isYesterday } from "date-fns";
 import {
   Inbox as InboxIcon,
   ArrowDownRight,
@@ -131,11 +131,18 @@ export default function InboxPage() {
             disabled={dates.length === 0}
           >
             {dates.length === 0 && <option value="">No dates available</option>}
-            {dates.map((dateStr) => (
-              <option key={dateStr} value={dateStr}>
-                {format(parseISO(dateStr), "EEEE, MMM d, yyyy")}
-              </option>
-            ))}
+            {dates.map((dateStr) => {
+              const d = parseISO(dateStr);
+              return (
+                <option key={dateStr} value={dateStr}>
+                  {isToday(d)
+                    ? "Today"
+                    : isYesterday(d)
+                      ? "Yesterday"
+                      : format(d, "EEEE, MMM d, yyyy")}
+                </option>
+              );
+            })}
           </select>
         </div>
 
