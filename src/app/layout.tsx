@@ -9,6 +9,7 @@ import {
   Inbox as InboxIcon,
 } from "lucide-react";
 import Navigation from "@/components/Navigation"; // We'll extract this to a client component for active states
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Misti Viewer",
@@ -33,8 +34,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navigation />
-        <main className="container">{children}</main>
+        <ThemeProvider>
+          <Navigation />
+          <main className="container">{children}</main>
+        </ThemeProvider>
       </body>
     </html>
   );

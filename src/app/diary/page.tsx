@@ -175,8 +175,7 @@ export default function DiaryPage() {
                         left: 0,
                         right: 0,
                         height: "80px",
-                        background:
-                          "linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1))",
+                        background: "var(--fade-gradient)",
                         pointerEvents: "none",
                       }}
                     />
