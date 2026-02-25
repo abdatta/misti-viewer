@@ -113,17 +113,45 @@ function InboxContent() {
     }
   }, [dates, selectedDateStr, dateParam, pathname, router, searchParams]);
 
-  const currentIndex = dates.indexOf(selectedDateStr);
-  const hasNext = currentIndex > 0; // newer dates are earlier in the array
-  const hasPrev = currentIndex !== -1 && currentIndex < dates.length - 1; // older dates
+  const isValidDate = (d: string) => {
+    if (!d) return false;
+    const parsed = new Date(d);
+    return !isNaN(parsed.getTime());
+  };
+  const isSelectedInvalid = selectedDateStr
+    ? !isValidDate(selectedDateStr)
+    : false;
+
+  let prevDateToNavigate: string | null = null;
+  let nextDateToNavigate: string | null = null;
+
+  if (isSelectedInvalid) {
+    prevDateToNavigate = dates.length > 0 ? dates[dates.length - 1] : null;
+    nextDateToNavigate = format(new Date(), "yyyy-MM-dd");
+  } else if (selectedDateStr) {
+    prevDateToNavigate = dates.find((d) => d < selectedDateStr) || null;
+    nextDateToNavigate =
+      [...dates].reverse().find((d) => d > selectedDateStr) || null;
+  }
+
+  const hasPrev = !!prevDateToNavigate;
+  const hasNext = !!nextDateToNavigate;
 
   const handlePrevDay = () => {
-    if (hasPrev) handleDateChange(dates[currentIndex + 1]);
+    if (prevDateToNavigate) handleDateChange(prevDateToNavigate);
   };
 
   const handleNextDay = () => {
-    if (hasNext) handleDateChange(dates[currentIndex - 1]);
+    if (nextDateToNavigate) handleDateChange(nextDateToNavigate);
   };
+
+  const displayDates = [...dates];
+  if (selectedDateStr && !displayDates.includes(selectedDateStr)) {
+    displayDates.push(selectedDateStr);
+    if (!isSelectedInvalid) {
+      displayDates.sort((a, b) => b.localeCompare(a));
+    }
+  }
 
   const filteredItems =
     data?.items?.filter(
@@ -143,7 +171,7 @@ function InboxContent() {
         <button
           className="btn-icon-clear"
           onClick={handlePrevDay}
-          disabled={!hasPrev || dates.length === 0}
+          disabled={!hasPrev || displayDates.length === 0}
         >
           <ChevronLeft size={20} strokeWidth={2.5} />
         </button>
@@ -153,10 +181,19 @@ function InboxContent() {
             className="select-pretty"
             value={selectedDateStr}
             onChange={(e) => handleDateChange(e.target.value)}
-            disabled={dates.length === 0}
+            disabled={displayDates.length === 0}
           >
-            {dates.length === 0 && <option value="">No dates available</option>}
-            {dates.map((dateStr) => {
+            {displayDates.length === 0 && (
+              <option value="">No dates available</option>
+            )}
+            {displayDates.map((dateStr) => {
+              if (dateStr === selectedDateStr && isSelectedInvalid) {
+                return (
+                  <option key={dateStr} value={dateStr}>
+                    Invalid Date
+                  </option>
+                );
+              }
               const d = parseISO(dateStr);
               return (
                 <option key={dateStr} value={dateStr}>
@@ -174,7 +211,7 @@ function InboxContent() {
         <button
           className="btn-icon-clear"
           onClick={handleNextDay}
-          disabled={!hasNext || dates.length === 0}
+          disabled={!hasNext || displayDates.length === 0}
         >
           <ChevronRight size={20} strokeWidth={2.5} />
         </button>

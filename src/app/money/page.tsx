@@ -82,17 +82,43 @@ function MoneyContent() {
     }
   };
 
-  const currentIndex = dates.indexOf(selectedDate);
-  const hasNext = currentIndex > 0;
-  const hasPrev = currentIndex < dates.length - 1;
+  const isValidDate = (d: string) => {
+    if (!d) return false;
+    const parsed = new Date(d);
+    return !isNaN(parsed.getTime());
+  };
+  const isSelectedInvalid = selectedDate ? !isValidDate(selectedDate) : false;
+
+  let prevDateToNavigate: string | null = null;
+  let nextDateToNavigate: string | null = null;
+
+  if (isSelectedInvalid) {
+    prevDateToNavigate = dates.length > 0 ? dates[dates.length - 1] : null;
+    nextDateToNavigate = format(new Date(), "yyyy-MM-dd");
+  } else if (selectedDate) {
+    prevDateToNavigate = dates.find((d) => d < selectedDate) || null;
+    nextDateToNavigate =
+      [...dates].reverse().find((d) => d > selectedDate) || null;
+  }
+
+  const hasPrev = !!prevDateToNavigate;
+  const hasNext = !!nextDateToNavigate;
 
   const handlePrevDay = () => {
-    if (hasPrev) handleDateChange(dates[currentIndex + 1]);
+    if (prevDateToNavigate) handleDateChange(prevDateToNavigate);
   };
 
   const handleNextDay = () => {
-    if (hasNext) handleDateChange(dates[currentIndex - 1]);
+    if (nextDateToNavigate) handleDateChange(nextDateToNavigate);
   };
+
+  const displayDates = [...dates];
+  if (selectedDate && !displayDates.includes(selectedDate)) {
+    displayDates.push(selectedDate);
+    if (!isSelectedInvalid) {
+      displayDates.sort((a, b) => b.localeCompare(a));
+    }
+  }
 
   return (
     <div className="animate-fade-in">
@@ -106,7 +132,7 @@ function MoneyContent() {
         <button
           className="btn-icon-clear"
           onClick={handlePrevDay}
-          disabled={!hasPrev || dates.length === 0}
+          disabled={!hasPrev || displayDates.length === 0}
         >
           <ChevronLeft size={20} strokeWidth={2.5} />
         </button>
@@ -116,13 +142,22 @@ function MoneyContent() {
             className="select-pretty"
             value={selectedDate}
             onChange={(e) => handleDateChange(e.target.value)}
-            disabled={dates.length === 0}
+            disabled={displayDates.length === 0}
           >
-            {dates.length === 0 && <option value="">No dates available</option>}
-            {dates.map((date) => {
-              const d = parseISO(date);
+            {displayDates.length === 0 && (
+              <option value="">No dates available</option>
+            )}
+            {displayDates.map((dateStr) => {
+              if (dateStr === selectedDate && isSelectedInvalid) {
+                return (
+                  <option key={dateStr} value={dateStr}>
+                    Invalid Date
+                  </option>
+                );
+              }
+              const d = parseISO(dateStr);
               return (
-                <option key={date} value={date}>
+                <option key={dateStr} value={dateStr}>
                   {isToday(d)
                     ? "Today"
                     : isYesterday(d)
@@ -137,7 +172,7 @@ function MoneyContent() {
         <button
           className="btn-icon-clear"
           onClick={handleNextDay}
-          disabled={!hasNext || dates.length === 0}
+          disabled={!hasNext || displayDates.length === 0}
         >
           <ChevronRight size={20} strokeWidth={2.5} />
         </button>
