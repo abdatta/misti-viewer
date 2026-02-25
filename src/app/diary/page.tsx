@@ -19,7 +19,9 @@ function DiaryContent() {
   const dateParam = searchParams.get("date");
 
   const [dates, setDates] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>(dateParam || "");
+  const [selectedDate, setSelectedDate] = useState<string>(
+    dateParam || format(new Date(), "yyyy-MM-dd"),
+  );
   const [chunks, setChunks] = useState<Chunk[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedChunks, setExpandedChunks] = useState<Record<number, boolean>>(
@@ -43,9 +45,6 @@ function DiaryContent() {
       const res = await fetch("/api/diary/dates");
       const data = await res.json();
       setDates(data.dates || []);
-      if (data.dates?.length > 0 && !selectedDate && !dateParam) {
-        handleDateChange(data.dates[0]); // default to latest
-      }
     } catch (err) {
       console.error(err);
     }
@@ -92,16 +91,29 @@ function DiaryContent() {
   };
   const isSelectedInvalid = selectedDate ? !isValidDate(selectedDate) : false;
 
+  const displayDates = [...dates];
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  if (!displayDates.includes(todayStr)) {
+    displayDates.push(todayStr);
+  }
+  if (selectedDate && !displayDates.includes(selectedDate)) {
+    displayDates.push(selectedDate);
+  }
+  if (!isSelectedInvalid) {
+    displayDates.sort((a, b) => b.localeCompare(a));
+  }
+
   let prevDateToNavigate: string | null = null;
   let nextDateToNavigate: string | null = null;
 
   if (isSelectedInvalid) {
-    prevDateToNavigate = dates.length > 0 ? dates[dates.length - 1] : null;
-    nextDateToNavigate = format(new Date(), "yyyy-MM-dd");
+    prevDateToNavigate =
+      displayDates.length > 0 ? displayDates[displayDates.length - 1] : null;
+    nextDateToNavigate = todayStr;
   } else if (selectedDate) {
-    prevDateToNavigate = dates.find((d) => d < selectedDate) || null;
+    prevDateToNavigate = displayDates.find((d) => d < selectedDate) || null;
     nextDateToNavigate =
-      [...dates].reverse().find((d) => d > selectedDate) || null;
+      [...displayDates].reverse().find((d) => d > selectedDate) || null;
   }
 
   const hasPrev = !!prevDateToNavigate;
@@ -114,14 +126,6 @@ function DiaryContent() {
   const handleNextDay = () => {
     if (nextDateToNavigate) handleDateChange(nextDateToNavigate);
   };
-
-  const displayDates = [...dates];
-  if (selectedDate && !displayDates.includes(selectedDate)) {
-    displayDates.push(selectedDate);
-    if (!isSelectedInvalid) {
-      displayDates.sort((a, b) => b.localeCompare(a));
-    }
-  }
 
   const toggleExpand = (index: number) => {
     setExpandedChunks((prev) => ({ ...prev, [index]: !prev[index] }));

@@ -64,7 +64,7 @@ function InboxContent() {
   const [data, setData] = useState<InboxData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDateStr, setSelectedDateStr] = useState<string>(
-    dateParam || "",
+    dateParam || format(new Date(), "yyyy-MM-dd"),
   );
 
   const fetchInbox = async () => {
@@ -107,12 +107,6 @@ function InboxContent() {
     router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`);
   };
 
-  useEffect(() => {
-    if (dates.length > 0 && !selectedDateStr && !dateParam) {
-      handleDateChange(dates[0]); // default to the latest date
-    }
-  }, [dates, selectedDateStr, dateParam, pathname, router, searchParams]);
-
   const isValidDate = (d: string) => {
     if (!d) return false;
     const parsed = new Date(d);
@@ -122,16 +116,29 @@ function InboxContent() {
     ? !isValidDate(selectedDateStr)
     : false;
 
+  const displayDates = [...dates];
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  if (!displayDates.includes(todayStr)) {
+    displayDates.push(todayStr);
+  }
+  if (selectedDateStr && !displayDates.includes(selectedDateStr)) {
+    displayDates.push(selectedDateStr);
+  }
+  if (!isSelectedInvalid) {
+    displayDates.sort((a, b) => b.localeCompare(a));
+  }
+
   let prevDateToNavigate: string | null = null;
   let nextDateToNavigate: string | null = null;
 
   if (isSelectedInvalid) {
-    prevDateToNavigate = dates.length > 0 ? dates[dates.length - 1] : null;
-    nextDateToNavigate = format(new Date(), "yyyy-MM-dd");
+    prevDateToNavigate =
+      displayDates.length > 0 ? displayDates[displayDates.length - 1] : null;
+    nextDateToNavigate = todayStr;
   } else if (selectedDateStr) {
-    prevDateToNavigate = dates.find((d) => d < selectedDateStr) || null;
+    prevDateToNavigate = displayDates.find((d) => d < selectedDateStr) || null;
     nextDateToNavigate =
-      [...dates].reverse().find((d) => d > selectedDateStr) || null;
+      [...displayDates].reverse().find((d) => d > selectedDateStr) || null;
   }
 
   const hasPrev = !!prevDateToNavigate;
@@ -144,14 +151,6 @@ function InboxContent() {
   const handleNextDay = () => {
     if (nextDateToNavigate) handleDateChange(nextDateToNavigate);
   };
-
-  const displayDates = [...dates];
-  if (selectedDateStr && !displayDates.includes(selectedDateStr)) {
-    displayDates.push(selectedDateStr);
-    if (!isSelectedInvalid) {
-      displayDates.sort((a, b) => b.localeCompare(a));
-    }
-  }
 
   const filteredItems =
     data?.items?.filter(

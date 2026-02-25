@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format, isToday, isYesterday } from "date-fns";
+
 import { CalendarCheck } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import AppHeader from "@/components/AppHeader";
@@ -45,15 +45,6 @@ export default function PlanPage() {
         title="Plan"
         icon={<CalendarCheck size={32} />}
         onRefresh={fetchPlan}
-        lastUpdated={
-          data
-            ? isToday(data.lastModified)
-              ? `Today, ${format(data.lastModified, "h:mm a")}`
-              : isYesterday(data.lastModified)
-                ? `Yesterday, ${format(data.lastModified, "h:mm a")}`
-                : format(data.lastModified, "MMM d, h:mm a")
-            : undefined
-        }
       />
 
       {loading && !data ? (
