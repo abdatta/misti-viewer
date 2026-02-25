@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format, parseISO, isToday, isYesterday } from "date-fns";
 import { Receipt, ChevronLeft, ChevronRight } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
@@ -12,19 +13,36 @@ type MoneyEntry = {
   markdownText: string;
 };
 
-export default function MoneyPage() {
+function MoneyContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const dateParam = searchParams.get("date");
+
   const [dates, setDates] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<string>(dateParam || "");
   const [entry, setEntry] = useState<MoneyEntry | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const handleDateChange = (newDate: string) => {
+    setSelectedDate(newDate);
+    const params = new URLSearchParams(searchParams.toString());
+    if (isToday(parseISO(newDate))) {
+      params.delete("date");
+    } else {
+      params.set("date", newDate);
+    }
+    const queryString = params.toString();
+    router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`);
+  };
 
   const fetchDates = async () => {
     try {
       const res = await fetch("/api/money/dates");
       const data = await res.json();
       setDates(data.dates || []);
-      if (data.dates?.length > 0 && !selectedDate) {
-        setSelectedDate(data.dates[0]); // default to latest
+      if (data.dates?.length > 0 && !selectedDate && !dateParam) {
+        handleDateChange(data.dates[0]); // default to latest
       }
     } catch (err) {
       console.error(err);
@@ -69,11 +87,11 @@ export default function MoneyPage() {
   const hasPrev = currentIndex < dates.length - 1;
 
   const handlePrevDay = () => {
-    if (hasPrev) setSelectedDate(dates[currentIndex + 1]);
+    if (hasPrev) handleDateChange(dates[currentIndex + 1]);
   };
 
   const handleNextDay = () => {
-    if (hasNext) setSelectedDate(dates[currentIndex - 1]);
+    if (hasNext) handleDateChange(dates[currentIndex - 1]);
   };
 
   return (
@@ -97,7 +115,7 @@ export default function MoneyPage() {
           <select
             className="select-pretty"
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            onChange={(e) => handleDateChange(e.target.value)}
             disabled={dates.length === 0}
           >
             {dates.length === 0 && <option value="">No dates available</option>}
@@ -137,5 +155,19 @@ export default function MoneyPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function MoneyPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="animate-fade-in">
+          <div className="empty-state">Loading...</div>
+        </div>
+      }
+    >
+      <MoneyContent />
+    </Suspense>
   );
 }

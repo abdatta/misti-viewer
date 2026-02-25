@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import {
   BookOpen,
   Receipt,
@@ -9,8 +10,11 @@ import {
   Inbox as InboxIcon,
 } from "lucide-react";
 
-export default function Navigation() {
+function NavigationContent() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const dateParam = searchParams.get("date");
+  const dateQuery = dateParam ? `?date=${dateParam}` : "";
 
   const navItems = [
     { name: "Diary", href: "/diary", icon: BookOpen },
@@ -28,7 +32,7 @@ export default function Navigation() {
           return (
             <Link
               key={item.name}
-              href={item.href}
+              href={`${item.href}${dateQuery}`}
               className={`nav-link ${isActive ? "active" : ""}`}
             >
               <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
@@ -38,5 +42,13 @@ export default function Navigation() {
         })}
       </div>
     </nav>
+  );
+}
+
+export default function Navigation() {
+  return (
+    <Suspense fallback={<nav className="bottom-nav"></nav>}>
+      <NavigationContent />
+    </Suspense>
   );
 }

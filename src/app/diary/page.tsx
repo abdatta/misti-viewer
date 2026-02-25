@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format, parseISO, isToday, isYesterday } from "date-fns";
 import { ChevronLeft, ChevronRight, BookOpen, Clock } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
@@ -11,22 +12,39 @@ type Chunk = {
   markdownText: string;
 };
 
-export default function DiaryPage() {
+function DiaryContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const dateParam = searchParams.get("date");
+
   const [dates, setDates] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<string>(dateParam || "");
   const [chunks, setChunks] = useState<Chunk[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedChunks, setExpandedChunks] = useState<Record<number, boolean>>(
     {},
   );
 
+  const handleDateChange = (newDate: string) => {
+    setSelectedDate(newDate);
+    const params = new URLSearchParams(searchParams.toString());
+    if (isToday(parseISO(newDate))) {
+      params.delete("date");
+    } else {
+      params.set("date", newDate);
+    }
+    const queryString = params.toString();
+    router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`);
+  };
+
   const fetchDates = async () => {
     try {
       const res = await fetch("/api/diary/dates");
       const data = await res.json();
       setDates(data.dates || []);
-      if (data.dates?.length > 0 && !selectedDate) {
-        setSelectedDate(data.dates[0]); // default to latest
+      if (data.dates?.length > 0 && !selectedDate && !dateParam) {
+        handleDateChange(data.dates[0]); // default to latest
       }
     } catch (err) {
       console.error(err);
@@ -72,11 +90,11 @@ export default function DiaryPage() {
   const hasPrev = currentIndex < dates.length - 1; // older dates
 
   const handlePrevDay = () => {
-    if (hasPrev) setSelectedDate(dates[currentIndex + 1]);
+    if (hasPrev) handleDateChange(dates[currentIndex + 1]);
   };
 
   const handleNextDay = () => {
-    if (hasNext) setSelectedDate(dates[currentIndex - 1]);
+    if (hasNext) handleDateChange(dates[currentIndex - 1]);
   };
 
   const toggleExpand = (index: number) => {
@@ -104,7 +122,7 @@ export default function DiaryPage() {
           <select
             className="select-pretty"
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            onChange={(e) => handleDateChange(e.target.value)}
             disabled={dates.length === 0}
           >
             {dates.length === 0 && <option value="">No dates available</option>}
@@ -208,5 +226,19 @@ export default function DiaryPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DiaryPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="animate-fade-in">
+          <div className="empty-state">Loading...</div>
+        </div>
+      }
+    >
+      <DiaryContent />
+    </Suspense>
   );
 }

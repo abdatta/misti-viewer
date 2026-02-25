@@ -254,6 +254,110 @@ button {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* Category Pills */
+.pill-base {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+  margin-left: 4px;
+}
+
+.pill-default {
+  background: rgba(45, 42, 38, 0.04);
+  color: var(--text-muted);
+}
+:root.dark .pill-default {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+}
+
+/* Light mode category flavors */
+.pill-text {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+.pill-email {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+.pill-call {
+  background: #fff7ed;
+  color: #ea580c;
+}
+.pill-voicemail {
+  background: #fef2f2;
+  color: #dc2626;
+}
+.pill-invite {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+.pill-encounter {
+  background: #fdf4ff;
+  color: #c026d3;
+}
+.pill-dialogue {
+  background: #fffbeb;
+  color: #d97706;
+}
+.pill-imessage {
+  background: #eff6ff;
+  color: #2563eb;
+}
+.pill-sms {
+  background: #fdf2f8;
+  color: #db2777;
+}
+.pill-whatsapp {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* Dark mode category flavors */
+:root.dark .pill-text {
+  background: rgba(79, 70, 229, 0.15);
+  color: #818cf8;
+}
+:root.dark .pill-email {
+  background: rgba(22, 163, 74, 0.15);
+  color: #4ade80;
+}
+:root.dark .pill-call {
+  background: rgba(234, 88, 12, 0.15);
+  color: #fb923c;
+}
+:root.dark .pill-voicemail {
+  background: rgba(220, 38, 38, 0.15);
+  color: #f87171;
+}
+:root.dark .pill-invite {
+  background: rgba(124, 58, 237, 0.15);
+  color: #a78bfa;
+}
+:root.dark .pill-encounter {
+  background: rgba(192, 38, 211, 0.15);
+  color: #e879f9;
+}
+:root.dark .pill-dialogue {
+  background: rgba(217, 119, 6, 0.15);
+  color: #fbbf24;
+}
+:root.dark .pill-imessage {
+  background: rgba(37, 99, 235, 0.15);
+  color: #60a5fa;
+}
+:root.dark .pill-sms {
+  background: rgba(219, 39, 119, 0.15);
+  color: #f472b6;
+}
+:root.dark .pill-whatsapp {
+  background: rgba(5, 150, 105, 0.15);
+  color: #34d399;
+}
+
 /* Typography styles inside Markdown */
 .prose {
   line-height: 1.7;

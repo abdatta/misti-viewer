@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format, parseISO, isToday, isYesterday } from "date-fns";
 import {
   Inbox as InboxIcon,
@@ -27,32 +28,44 @@ type InboxData = {
   items: InboxItem[];
 };
 
-const getTypeStyles = (type: string) => {
+const getTypeClass = (type: string) => {
   switch (type.toLowerCase()) {
     case "text":
-      return { background: "#eef2ff", color: "#4f46e5" }; // Soft indigo
+      return "pill-text";
     case "email":
-      return { background: "#f0fdf4", color: "#16a34a" }; // Soft green
+      return "pill-email";
     case "call":
-      return { background: "#fff7ed", color: "#ea580c" }; // Soft orange
+      return "pill-call";
+    case "voicemail":
+      return "pill-voicemail";
+    case "invite":
+      return "pill-invite";
+    case "encounter":
+      return "pill-encounter";
+    case "dialogue":
+      return "pill-dialogue";
     case "imessage":
-      return { background: "#eff6ff", color: "#2563eb" }; // Soft blue
+      return "pill-imessage";
     case "sms":
-      return { background: "#fdf2f8", color: "#db2777" }; // Soft pink
+      return "pill-sms";
     case "whatsapp":
-      return { background: "#ecfdf5", color: "#059669" }; // Soft emerald
+      return "pill-whatsapp";
     default:
-      return {
-        background: "rgba(45, 42, 38, 0.04)",
-        color: "var(--text-muted)",
-      };
+      return "pill-default";
   }
 };
 
-export default function InboxPage() {
+function InboxContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const dateParam = searchParams.get("date");
+
   const [data, setData] = useState<InboxData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedDateStr, setSelectedDateStr] = useState<string>("");
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(
+    dateParam || "",
+  );
 
   const fetchInbox = async () => {
     setLoading(true);
@@ -82,22 +95,34 @@ export default function InboxPage() {
     ),
   ).sort((a, b) => b.localeCompare(a)); // sort descending
 
-  useEffect(() => {
-    if (dates.length > 0 && !selectedDateStr) {
-      setSelectedDateStr(dates[0]); // default to the latest date
+  const handleDateChange = (newDate: string) => {
+    setSelectedDateStr(newDate);
+    const params = new URLSearchParams(searchParams.toString());
+    if (isToday(parseISO(newDate))) {
+      params.delete("date");
+    } else {
+      params.set("date", newDate);
     }
-  }, [dates, selectedDateStr]);
+    const queryString = params.toString();
+    router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`);
+  };
+
+  useEffect(() => {
+    if (dates.length > 0 && !selectedDateStr && !dateParam) {
+      handleDateChange(dates[0]); // default to the latest date
+    }
+  }, [dates, selectedDateStr, dateParam, pathname, router, searchParams]);
 
   const currentIndex = dates.indexOf(selectedDateStr);
   const hasNext = currentIndex > 0; // newer dates are earlier in the array
   const hasPrev = currentIndex !== -1 && currentIndex < dates.length - 1; // older dates
 
   const handlePrevDay = () => {
-    if (hasPrev) setSelectedDateStr(dates[currentIndex + 1]);
+    if (hasPrev) handleDateChange(dates[currentIndex + 1]);
   };
 
   const handleNextDay = () => {
-    if (hasNext) setSelectedDateStr(dates[currentIndex - 1]);
+    if (hasNext) handleDateChange(dates[currentIndex - 1]);
   };
 
   const filteredItems =
@@ -127,7 +152,7 @@ export default function InboxPage() {
           <select
             className="select-pretty"
             value={selectedDateStr}
-            onChange={(e) => setSelectedDateStr(e.target.value)}
+            onChange={(e) => handleDateChange(e.target.value)}
             disabled={dates.length === 0}
           >
             {dates.length === 0 && <option value="">No dates available</option>}
@@ -235,19 +260,7 @@ export default function InboxPage() {
                       </span>
                     </div>
                   )}
-                  <span
-                    style={{
-                      fontSize: "0.75rem",
-                      padding: "4px 10px",
-                      borderRadius: "100px",
-                      background: getTypeStyles(item.type).background,
-                      color: getTypeStyles(item.type).color,
-                      fontWeight: 600,
-                      textTransform: "capitalize",
-                      letterSpacing: "0.02em",
-                      marginLeft: "4px",
-                    }}
-                  >
+                  <span className={`pill-base ${getTypeClass(item.type)}`}>
                     {item.type}
                   </span>
                 </div>
@@ -267,5 +280,19 @@ export default function InboxPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function InboxPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="animate-fade-in">
+          <div className="empty-state">Loading...</div>
+        </div>
+      }
+    >
+      <InboxContent />
+    </Suspense>
   );
 }
