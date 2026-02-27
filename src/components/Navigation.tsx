@@ -18,9 +18,9 @@ function NavigationContent() {
 
   const navItems = [
     { name: "Diary", href: "/diary", icon: BookOpen },
+    { name: "Inbox", href: "/inbox", icon: InboxIcon },
     { name: "Money", href: "/money", icon: Receipt },
     { name: "Plan", href: "/plan", icon: CalendarCheck },
-    { name: "Inbox", href: "/inbox", icon: InboxIcon },
   ];
 
   return (

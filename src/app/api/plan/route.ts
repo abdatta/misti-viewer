@@ -15,7 +15,7 @@ export async function GET() {
     const plan = JSON.parse(fileData.content);
     const chunks: { title: string; content: string }[] = [];
 
-    if (plan.today) {
+    if (plan.today && plan.today.items && plan.today.items.length > 0) {
       const todayItems = plan.today.items
         .map((item: any) => `- **${item.time}** — ${item.plan}`)
         .join("\n");
@@ -25,7 +25,11 @@ export async function GET() {
       });
     }
 
-    if (plan.tomorrow) {
+    if (
+      plan.tomorrow &&
+      plan.tomorrow.items &&
+      plan.tomorrow.items.length > 0
+    ) {
       const tomorrowItems = plan.tomorrow.items
         .map((item: any) => `- **${item.time}** — ${item.plan}`)
         .join("\n");
