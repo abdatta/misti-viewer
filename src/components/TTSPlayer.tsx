@@ -42,6 +42,7 @@ export default function TTSPlayer({ text, onEnded, id }: TTSPlayerProps) {
   const togglePlay = async () => {
     if (isPlaying && audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.src = "";
       setIsPlaying(false);
       if (activeAudio === audioRef.current) {
         activeAudio = null;
@@ -53,6 +54,7 @@ export default function TTSPlayer({ text, onEnded, id }: TTSPlayerProps) {
     // Stop any globally playing audio first
     if (activeAudio && activeSetIsPlaying && activeAudio !== audioRef.current) {
       activeAudio.pause();
+      activeAudio.src = "";
       activeSetIsPlaying(false);
     }
 

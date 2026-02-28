@@ -82,27 +82,26 @@ function DiaryContent() {
 
   // Hook into chunks loading to trigger cross-day auto-play
   useEffect(() => {
-    if (
-      chunks.length > 0 &&
-      localStorage.getItem("tts-continue-next-day") === "true"
-    ) {
-      // Clear flag immediately so it doesn't loop
+    if (!loading && localStorage.getItem("tts-continue-next-day") === "true") {
+      // Always clear flag immediately so it doesn't loop or strand
       localStorage.removeItem("tts-continue-next-day");
 
-      // We want to auto-play this new day's chronologically oldest entry,
-      // which is the LAST one in the chunks array.
-      setTimeout(() => {
-        const oldestEntryIndex = chunks.length - 1;
-        const playBtn = document.getElementById(
-          `tts-play-btn-${oldestEntryIndex}`,
-        );
-        if (playBtn) {
-          playBtn.scrollIntoView({ behavior: "smooth", block: "center" });
-          playBtn.click();
-        }
-      }, 500); // Small delay to let DOM paint properly
+      if (chunks.length > 0) {
+        // We want to auto-play this new day's chronologically oldest entry,
+        // which is the LAST one in the chunks array.
+        setTimeout(() => {
+          const oldestEntryIndex = chunks.length - 1;
+          const playBtn = document.getElementById(
+            `tts-play-btn-${oldestEntryIndex}`,
+          );
+          if (playBtn) {
+            playBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+            playBtn.click();
+          }
+        }, 500); // Small delay to let DOM paint properly
+      }
     }
-  }, [chunks]);
+  }, [chunks, loading]);
 
   const handleRefresh = () => {
     fetchDates();
