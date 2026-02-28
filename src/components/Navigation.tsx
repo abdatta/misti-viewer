@@ -8,6 +8,7 @@ import {
   Receipt,
   CalendarCheck,
   Inbox as InboxIcon,
+  Settings,
 } from "lucide-react";
 
 function NavigationContent() {
@@ -21,6 +22,7 @@ function NavigationContent() {
     { name: "Inbox", href: "/inbox", icon: InboxIcon },
     { name: "Money", href: "/money", icon: Receipt },
     { name: "Plan", href: "/plan", icon: CalendarCheck },
+    { name: "Settings", href: "/settings", icon: Settings },
   ];
 
   return (

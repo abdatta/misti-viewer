@@ -6,6 +6,7 @@ import { format, parseISO, isToday, isYesterday } from "date-fns";
 import { ChevronLeft, ChevronRight, BookOpen, Clock } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import AppHeader from "@/components/AppHeader";
+import TTSPlayer from "@/components/TTSPlayer";
 
 type Chunk = {
   timeLabel: string;
@@ -220,6 +221,8 @@ function DiaryContent() {
                   <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>
                     {chunk.timeLabel}
                   </h3>
+                  <div style={{ flex: 1 }} />
+                  <TTSPlayer text={chunk.markdownText} />
                 </div>
 
                 <div
