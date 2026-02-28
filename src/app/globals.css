@@ -153,10 +153,9 @@ button {
   width: 100%;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 460px) {
   .bottom-nav {
-    padding: 16px 20px;
-    width: calc(100vw - 24px);
+    width: calc(100vw - 48px);
   }
 
   .nav-links {

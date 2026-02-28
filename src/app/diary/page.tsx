@@ -80,6 +80,30 @@ function DiaryContent() {
     }
   }, [selectedDate]);
 
+  // Hook into chunks loading to trigger cross-day auto-play
+  useEffect(() => {
+    if (
+      chunks.length > 0 &&
+      localStorage.getItem("tts-continue-next-day") === "true"
+    ) {
+      // Clear flag immediately so it doesn't loop
+      localStorage.removeItem("tts-continue-next-day");
+
+      // We want to auto-play this new day's chronologically oldest entry,
+      // which is the LAST one in the chunks array.
+      setTimeout(() => {
+        const oldestEntryIndex = chunks.length - 1;
+        const playBtn = document.getElementById(
+          `tts-play-btn-${oldestEntryIndex}`,
+        );
+        if (playBtn) {
+          playBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+          playBtn.click();
+        }
+      }, 500); // Small delay to let DOM paint properly
+    }
+  }, [chunks]);
+
   const handleRefresh = () => {
     fetchDates();
     if (selectedDate) fetchEntry(selectedDate);
@@ -222,7 +246,35 @@ function DiaryContent() {
                     {chunk.timeLabel}
                   </h3>
                   <div style={{ flex: 1 }} />
-                  <TTSPlayer text={chunk.markdownText} />
+                  <TTSPlayer
+                    id={`tts-play-btn-${i}`}
+                    text={`${chunk.timeLabel}... ${chunk.markdownText}`}
+                    onEnded={() => {
+                      const isAutoPlay =
+                        localStorage.getItem("tts-auto-play") === "true";
+                      if (isAutoPlay) {
+                        if (i > 0) {
+                          // Play the next entry chronologically on the *current* day
+                          const nextPlayerId = `tts-play-btn-${i - 1}`;
+                          const nextBtn = document.getElementById(nextPlayerId);
+                          if (nextBtn) {
+                            nextBtn.scrollIntoView({
+                              behavior: "smooth",
+                              block: "center",
+                            });
+                            nextBtn.click();
+                          }
+                        } else if (hasNext) {
+                          // We finished the chronological latest entry of this day.
+                          // Move to the chronologically *next* day.
+                          // Set a specialized localstorage flag so the *next* page knows to auto-start
+                          // its chronological oldest entry (which sits at chunks.length - 1).
+                          localStorage.setItem("tts-continue-next-day", "true");
+                          handleNextDay();
+                        }
+                      }
+                    }}
+                  />
                 </div>
 
                 <div

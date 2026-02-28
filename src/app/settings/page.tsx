@@ -34,13 +34,20 @@ export default function SettingsPage() {
   const [isAudioLoading, setIsAudioLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Auto-play toggle
+  const [autoPlayEnabled, setAutoPlayEnabled] = useState<boolean>(false);
+  const [savedAutoPlay, setSavedAutoPlay] = useState<boolean>(false);
+
   useEffect(() => {
-    // Load saved voice
+    // Load saved configurations
     const storedVoice = localStorage.getItem("preferred-tts-voice");
     if (storedVoice) {
       setSelectedVoice(storedVoice);
       setSavedVoice(storedVoice);
     }
+    const autoPlayStatus = localStorage.getItem("tts-auto-play") === "true";
+    setAutoPlayEnabled(autoPlayStatus);
+    setSavedAutoPlay(autoPlayStatus);
 
     // Fetch available voices
     const fetchVoices = async () => {
@@ -74,29 +81,27 @@ export default function SettingsPage() {
     const newVoice = e.target.value;
     setSelectedVoice(newVoice);
 
-    // Stop any currently playing audio if we switch voices
-    if (isPlaying && audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-      if (activeAudio === audioRef.current) {
-        setGlobalAudio(null, null);
-      }
-    }
+    // Auto-play sample immediately when a new voice is selected
+    playSample(newVoice);
   };
 
-  const handleSaveVoice = () => {
+  const handleSaveSettings = () => {
     localStorage.setItem("preferred-tts-voice", selectedVoice);
+    localStorage.setItem("tts-auto-play", String(autoPlayEnabled));
     setSavedVoice(selectedVoice);
+    setSavedAutoPlay(autoPlayEnabled);
   };
 
-  const playSample = async () => {
+  const playSample = async (overrideVoice?: string) => {
     if (isPlaying && audioRef.current) {
       audioRef.current.pause();
       setIsPlaying(false);
       if (activeAudio === audioRef.current) {
         setGlobalAudio(null, null);
       }
-      return;
+
+      // If we're clicking another voice while playing, don't just stop—restart with the new voice.
+      if (!overrideVoice) return;
     }
 
     // Stop any playing audio from Diary page
@@ -115,7 +120,7 @@ export default function SettingsPage() {
       const text = "Hey there, I'm Misti. I hope you like my voice!";
       const params = new URLSearchParams();
       params.append("text", text);
-      params.append("voice", selectedVoice);
+      params.append("voice", overrideVoice || selectedVoice);
 
       audioRef.current.src = `/api/tts?${params.toString()}`;
 
@@ -137,16 +142,47 @@ export default function SettingsPage() {
     }
   };
 
-  const hasUnsavedChanges = selectedVoice !== savedVoice;
+  const hasUnsavedChanges =
+    selectedVoice !== savedVoice || autoPlayEnabled !== savedAutoPlay;
 
   return (
     <div className="animate-fade-in">
       <AppHeader title="Settings" icon={<Settings size={32} />} />
 
       <div className="card">
-        <h2 style={{ fontSize: "1.2rem", marginBottom: "16px" }}>
-          Read Aloud Settings
-        </h2>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "16px",
+          }}
+        >
+          <h2 style={{ fontSize: "1.2rem", margin: 0 }}>Read Aloud Settings</h2>
+
+          <button
+            onClick={handleSaveSettings}
+            disabled={!hasUnsavedChanges}
+            style={{
+              background: hasUnsavedChanges
+                ? "var(--accent-color)"
+                : "transparent",
+              color: hasUnsavedChanges ? "white" : "var(--text-muted)",
+              border: hasUnsavedChanges
+                ? "none"
+                : "1px solid var(--border-subtle)",
+              padding: "6px 16px",
+              borderRadius: "var(--border-radius-sm)",
+              fontWeight: 600,
+              fontSize: "0.85rem",
+              transition: "var(--transition-smooth)",
+              opacity: hasUnsavedChanges ? 1 : 0.6,
+              cursor: hasUnsavedChanges ? "pointer" : "default",
+            }}
+          >
+            {hasUnsavedChanges ? "Save" : "Saved"}
+          </button>
+        </div>
 
         {loading ? (
           <div style={{ color: "var(--text-muted)" }}>
@@ -154,19 +190,35 @@ export default function SettingsPage() {
           </div>
         ) : (
           <div
-            style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+            style={{ display: "flex", flexDirection: "column", gap: "24px" }}
           >
             <div>
               <label
                 htmlFor="voice-select"
                 style={{
-                  display: "block",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                   marginBottom: "8px",
                   fontWeight: 600,
                   fontSize: "0.95rem",
                 }}
               >
-                TTS Voice
+                <span>TTS Voice</span>
+                {isAudioLoading && (
+                  <span
+                    style={{
+                      color: "var(--text-muted)",
+                      fontSize: "0.8rem",
+                      display: "flex",
+                      gap: "6px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Loader2 size={12} className="animate-spin" /> Playing
+                    Sample...
+                  </span>
+                )}
               </label>
               <div className="select-wrapper" style={{ width: "100%" }}>
                 <select
@@ -191,63 +243,73 @@ export default function SettingsPage() {
             </div>
 
             <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
               <div
-                style={{ display: "flex", alignItems: "center", gap: "12px" }}
-              >
-                <button
-                  onClick={playSample}
-                  disabled={isAudioLoading}
-                  className={`btn-icon ${isAudioLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                  aria-label={isPlaying ? "Stop Sample" : "Play Sample"}
-                  title={isPlaying ? "Stop Sample" : "Play Sample"}
-                >
-                  {isAudioLoading ? (
-                    <Loader2 size={20} className="animate-spin" />
-                  ) : isPlaying ? (
-                    <Square size={20} fill="currentColor" />
-                  ) : (
-                    <Play
-                      size={20}
-                      fill="currentColor"
-                      style={{ marginLeft: "2px" }}
-                    />
-                  )}
-                </button>
-                <span
-                  style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}
-                >
-                  {isPlaying ? "Playing sample..." : "Test voice"}
-                </span>
-              </div>
-
-              <button
-                onClick={handleSaveVoice}
-                disabled={!hasUnsavedChanges}
                 style={{
-                  background: hasUnsavedChanges
-                    ? "var(--accent-color)"
-                    : "transparent",
-                  color: hasUnsavedChanges ? "white" : "var(--text-muted)",
-                  border: hasUnsavedChanges
-                    ? "none"
-                    : "1px solid var(--border-subtle)",
-                  padding: "8px 16px",
-                  borderRadius: "var(--border-radius-sm)",
-                  fontWeight: 600,
-                  fontSize: "0.9rem",
-                  transition: "var(--transition-smooth)",
-                  opacity: hasUnsavedChanges ? 1 : 0.6,
-                  cursor: hasUnsavedChanges ? "pointer" : "default",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
-                {hasUnsavedChanges ? "Save Selection" : "Saved"}
-              </button>
+                <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>
+                  Auto-play next entry
+                </span>
+                <label
+                  style={{
+                    position: "relative",
+                    display: "inline-block",
+                    width: "44px",
+                    height: "24px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={autoPlayEnabled}
+                    onChange={(e) => setAutoPlayEnabled(e.target.checked)}
+                    style={{ opacity: 0, width: 0, height: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: "absolute",
+                      cursor: "pointer",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: autoPlayEnabled
+                        ? "var(--accent-color)"
+                        : "var(--border-subtle)",
+                      transition: ".2s",
+                      borderRadius: "24px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        content: '""',
+                        height: "18px",
+                        width: "18px",
+                        left: autoPlayEnabled ? "22px" : "3px",
+                        bottom: "3px",
+                        backgroundColor: "white",
+                        transition: ".2s",
+                        borderRadius: "50%",
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+              <span
+                style={{
+                  color: "var(--text-muted)",
+                  fontSize: "0.85rem",
+                }}
+              >
+                Automatically play the next chronological entry when the current
+                one finishes.
+              </span>
             </div>
           </div>
         )}

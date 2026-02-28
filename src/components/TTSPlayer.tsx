@@ -3,6 +3,8 @@ import { Play, Square, Loader2 } from "lucide-react";
 
 interface TTSPlayerProps {
   text: string;
+  onEnded?: () => void;
+  id?: string;
 }
 
 // Global reference to the currently playing audio element across all mounted TTSPlayer components
@@ -18,7 +20,7 @@ export const setGlobalAudio = (
   activeSetIsPlaying = setPlaying;
 };
 
-export default function TTSPlayer({ text }: TTSPlayerProps) {
+export default function TTSPlayer({ text, onEnded, id }: TTSPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -94,6 +96,11 @@ export default function TTSPlayer({ text }: TTSPlayerProps) {
         }
         // Reset the source so that if we play again, it requests fresh
         if (audioRef.current) audioRef.current.src = "";
+
+        // Notify parent that playback finished
+        if (onEnded) {
+          onEnded();
+        }
       };
 
       // Wait for it to start buffering enough to play
@@ -111,6 +118,7 @@ export default function TTSPlayer({ text }: TTSPlayerProps) {
 
   return (
     <button
+      id={id}
       onClick={togglePlay}
       disabled={isLoading}
       className={`btn-icon-clear ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
