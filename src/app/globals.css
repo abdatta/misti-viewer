@@ -523,6 +523,39 @@ button {
   color: var(--text-main);
 }
 
+.select-inline {
+  appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  padding-right: 24px; /* Space for the custom chevron */
+  font-family: var(--font-base);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  width: 100%;
+  text-align: left;
+  text-align-last: left;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a847e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0 center;
+  background-size: 16px;
+}
+
+.select-inline:focus {
+  outline: none;
+  color: var(--text-main);
+}
+
+:root.dark .select-inline {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a19d98' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+:root.dark .select-inline:focus {
+  color: var(--text-main);
+}
+
 .select-wrapper {
   position: relative;
   display: inline-block;
