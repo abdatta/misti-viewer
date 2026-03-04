@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import AppHeader from "@/components/AppHeader";
+import CustomDatePicker from "@/components/CustomDatePicker";
 
 type InboxItem = {
   direction: "inbound" | "outbound";
@@ -176,35 +177,12 @@ function InboxContent() {
         </button>
 
         <div className="select-wrapper">
-          <select
-            className="select-pretty"
-            value={selectedDateStr}
-            onChange={(e) => handleDateChange(e.target.value)}
+          <CustomDatePicker
+            selectedDate={selectedDateStr}
+            onChange={handleDateChange}
+            displayDates={displayDates}
             disabled={displayDates.length === 0}
-          >
-            {displayDates.length === 0 && (
-              <option value="">No dates available</option>
-            )}
-            {displayDates.map((dateStr) => {
-              if (dateStr === selectedDateStr && isSelectedInvalid) {
-                return (
-                  <option key={dateStr} value={dateStr}>
-                    Invalid Date
-                  </option>
-                );
-              }
-              const d = parseISO(dateStr);
-              return (
-                <option key={dateStr} value={dateStr}>
-                  {isToday(d)
-                    ? "Today"
-                    : isYesterday(d)
-                      ? "Yesterday"
-                      : format(d, "EEEE, MMM d, yyyy")}
-                </option>
-              );
-            })}
-          </select>
+          />
         </div>
 
         <button

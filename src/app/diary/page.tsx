@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, BookOpen, Clock } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import AppHeader from "@/components/AppHeader";
 import TTSPlayer from "@/components/TTSPlayer";
+import CustomDatePicker from "@/components/CustomDatePicker";
 
 type Chunk = {
   timeLabel: string;
@@ -173,35 +174,12 @@ function DiaryContent() {
         </button>
 
         <div className="select-wrapper">
-          <select
-            className="select-pretty"
-            value={selectedDate}
-            onChange={(e) => handleDateChange(e.target.value)}
+          <CustomDatePicker
+            selectedDate={selectedDate}
+            onChange={handleDateChange}
+            displayDates={displayDates}
             disabled={displayDates.length === 0}
-          >
-            {displayDates.length === 0 && (
-              <option value="">No dates available</option>
-            )}
-            {displayDates.map((dateStr) => {
-              if (dateStr === selectedDate && isSelectedInvalid) {
-                return (
-                  <option key={dateStr} value={dateStr}>
-                    Invalid Date
-                  </option>
-                );
-              }
-              const d = parseISO(dateStr);
-              return (
-                <option key={dateStr} value={dateStr}>
-                  {isToday(d)
-                    ? "Today"
-                    : isYesterday(d)
-                      ? "Yesterday"
-                      : format(d, "EEEE, MMM d, yyyy")}
-                </option>
-              );
-            })}
-          </select>
+          />
         </div>
 
         <button

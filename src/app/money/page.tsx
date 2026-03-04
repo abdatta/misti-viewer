@@ -6,6 +6,7 @@ import { format, parseISO, isToday, isYesterday } from "date-fns";
 import { Receipt, ChevronLeft, ChevronRight } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import AppHeader from "@/components/AppHeader";
+import CustomDatePicker from "@/components/CustomDatePicker";
 
 type MoneyEntry = {
   date: string;
@@ -142,35 +143,12 @@ function MoneyContent() {
         </button>
 
         <div className="select-wrapper">
-          <select
-            className="select-pretty"
-            value={selectedDate}
-            onChange={(e) => handleDateChange(e.target.value)}
+          <CustomDatePicker
+            selectedDate={selectedDate}
+            onChange={handleDateChange}
+            displayDates={displayDates}
             disabled={displayDates.length === 0}
-          >
-            {displayDates.length === 0 && (
-              <option value="">No dates available</option>
-            )}
-            {displayDates.map((dateStr) => {
-              if (dateStr === selectedDate && isSelectedInvalid) {
-                return (
-                  <option key={dateStr} value={dateStr}>
-                    Invalid Date
-                  </option>
-                );
-              }
-              const d = parseISO(dateStr);
-              return (
-                <option key={dateStr} value={dateStr}>
-                  {isToday(d)
-                    ? "Today"
-                    : isYesterday(d)
-                      ? "Yesterday"
-                      : format(d, "EEEE, MMM d, yyyy")}
-                </option>
-              );
-            })}
-          </select>
+          />
         </div>
 
         <button
