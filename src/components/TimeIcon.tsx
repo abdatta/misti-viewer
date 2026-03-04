@@ -71,12 +71,10 @@ export default function TimeIcon({
   const cosPhase = Math.cos(normPhase * Math.PI);
   const rx = Math.abs(cosPhase * 9);
 
-  const sweepWaxing = cosPhase >= 0 ? 0 : 1;
-  const sweepWaning = cosPhase >= 0 ? 1 : 0;
+  const sweep = cosPhase >= 0 ? 0 : 1;
+  const wax = isWaxing ? 1 : 0;
 
-  const d = isWaxing
-    ? `M 12 3 A 9 9 0 0 1 12 21 A ${rx} 9 0 0 ${sweepWaxing} 12 3 Z`
-    : `M 12 3 A 9 9 0 0 0 12 21 A ${rx} 9 0 0 ${sweepWaning} 12 3 Z`;
+  const d = `M 12 3 A 9 9 0 0 ${wax} 12 21 A ${rx} 9 0 0 ${sweep} 12 3 Z`;
 
   return (
     <svg

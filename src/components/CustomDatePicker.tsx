@@ -150,6 +150,8 @@ export default function CustomDatePicker({
     const d = parseISO(selectedDate);
     if (isToday(d)) {
       buttonText = "Today";
+    } else if (isYesterday(d)) {
+      buttonText = "Yesterday";
     } else {
       buttonText = format(d, "EEEE, MMM d, yyyy");
     }
