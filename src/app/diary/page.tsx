@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format, parseISO, isToday, isYesterday, addDays } from "date-fns";
 import { ChevronLeft, ChevronRight, BookOpen, Clock } from "lucide-react";
+import TimeIcon from "@/components/TimeIcon";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import AppHeader from "@/components/AppHeader";
 import TTSPlayer from "@/components/TTSPlayer";
@@ -218,7 +219,11 @@ function DiaryContent() {
                     color: "var(--text-muted)",
                   }}
                 >
-                  <Clock size={18} />
+                  <TimeIcon
+                    date={selectedDate}
+                    timeLabel={chunk.timeLabel}
+                    size={18}
+                  />
                   <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>
                     {chunk.timeLabel}
                   </h3>
