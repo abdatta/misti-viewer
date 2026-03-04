@@ -93,12 +93,29 @@ export default function CustomDatePicker({
     setIsOpen(false);
   };
 
-  const handleYesterday = (e: React.MouseEvent) => {
+  let oldestDateStr = "";
+  let oldestDateLabel = "Oldest";
+  if (displayDates && displayDates.length > 0) {
+    oldestDateStr = displayDates.reduce(
+      (min, curr) => (curr < min ? curr : min),
+      displayDates[0],
+    );
+    if (isValid(parseISO(oldestDateStr))) {
+      const oldestDate = parseISO(oldestDateStr);
+      const isCurrentYear =
+        oldestDate.getFullYear() === new Date().getFullYear();
+      oldestDateLabel = format(
+        oldestDate,
+        isCurrentYear ? "MMM d" : "MMM d, yyyy",
+      );
+    }
+  }
+
+  const handleOldest = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const yesterdayDate = new Date();
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const yesterdayStr = format(yesterdayDate, "yyyy-MM-dd");
-    onChange(yesterdayStr);
+    if (oldestDateStr) {
+      onChange(oldestDateStr);
+    }
     setIsOpen(false);
   };
 
@@ -133,8 +150,6 @@ export default function CustomDatePicker({
     const d = parseISO(selectedDate);
     if (isToday(d)) {
       buttonText = "Today";
-    } else if (isYesterday(d)) {
-      buttonText = "Yesterday";
     } else {
       buttonText = format(d, "EEEE, MMM d, yyyy");
     }
@@ -220,9 +235,10 @@ export default function CustomDatePicker({
             <button
               type="button"
               className="datepicker-action-btn"
-              onClick={handleYesterday}
+              onClick={handleOldest}
+              disabled={!oldestDateStr}
             >
-              Yesterday
+              {oldestDateLabel}
             </button>
             <button
               type="button"

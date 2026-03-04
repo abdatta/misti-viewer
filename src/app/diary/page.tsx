@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { format, parseISO, isToday, isYesterday } from "date-fns";
+import { format, parseISO, isToday, isYesterday, addDays } from "date-fns";
 import { ChevronLeft, ChevronRight, BookOpen, Clock } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import AppHeader from "@/components/AppHeader";
@@ -243,11 +243,23 @@ function DiaryContent() {
                           }
                         } else if (hasNext) {
                           // We finished the chronological latest entry of this day.
-                          // Move to the chronologically *next* day.
-                          // Set a specialized localstorage flag so the *next* page knows to auto-start
-                          // its chronological oldest entry (which sits at chunks.length - 1).
-                          localStorage.setItem("tts-continue-next-day", "true");
-                          handleNextDay();
+                          // Move to the chronologically *next* day ONLY if it is actually the next calendar day.
+                          const expectedNextDay = format(
+                            addDays(parseISO(selectedDate), 1),
+                            "yyyy-MM-dd",
+                          );
+                          if (
+                            hasNext &&
+                            nextDateToNavigate === expectedNextDay
+                          ) {
+                            // Set a specialized localstorage flag so the *next* page knows to auto-start
+                            // its chronological oldest entry (which sits at chunks.length - 1).
+                            localStorage.setItem(
+                              "tts-continue-next-day",
+                              "true",
+                            );
+                            handleNextDay();
+                          }
                         }
                       }
                     }}

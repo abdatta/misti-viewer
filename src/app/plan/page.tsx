@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { format } from "date-fns";
 
 import { CalendarCheck } from "lucide-react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
@@ -16,14 +18,18 @@ type PlanData = {
   chunks: PlanChunk[];
 };
 
-export default function PlanPage() {
+function PlanContent() {
+  const searchParams = useSearchParams();
+  const dateParam = searchParams.get("date");
+  const selectedDate = dateParam || format(new Date(), "yyyy-MM-dd");
+
   const [data, setData] = useState<PlanData | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchPlan = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/plan");
+      const res = await fetch(`/api/plan?date=${selectedDate}`);
       if (res.ok) {
         const json = await res.json();
         setData(json);
@@ -37,7 +43,7 @@ export default function PlanPage() {
 
   useEffect(() => {
     fetchPlan();
-  }, []);
+  }, [selectedDate]);
 
   return (
     <div className="animate-fade-in">
@@ -77,5 +83,19 @@ export default function PlanPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function PlanPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="animate-fade-in">
+          <div className="empty-state">Loading plan...</div>
+        </div>
+      }
+    >
+      <PlanContent />
+    </Suspense>
   );
 }

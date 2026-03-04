@@ -4,8 +4,23 @@ import { readFileContent } from "@/lib/sim-reader";
 // Add export const dynamic = 'force-dynamic' to ensure it's not statically cached
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const fileData = readFileContent("plan", "PLAN.json");
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const date = searchParams.get("date");
+
+  let rootToUse: string | undefined = undefined;
+
+  // --- Fallback feature ---
+  // If fallback is enabled, find which root the selected date's diary entry belongs to
+  if (process.env.USE_SIM_FALLBACKS !== "false" && date) {
+    const diaryData = readFileContent("diary", `${date}.md`);
+    if (diaryData) {
+      rootToUse = diaryData.root;
+    }
+  }
+  // --- End fallback feature ---
+
+  const fileData = readFileContent("plan", "PLAN.json", rootToUse);
 
   if (!fileData) {
     return NextResponse.json({ error: "Plan not found" }, { status: 404 });

@@ -55,14 +55,16 @@ export function getDatesFromFolder(folder: string): string[] {
 export function readFileContent(
   folder: string,
   filename: string,
-): { content: string; lastModified: number } | null {
+  specificRoot?: string,
+): { content: string; lastModified: number; root: string } | null {
   try {
-    for (const root of getSimRoots()) {
+    const rootsToSearch = specificRoot ? [specificRoot] : getSimRoots();
+    for (const root of rootsToSearch) {
       const filePath = path.join(root, folder, filename);
       if (fs.existsSync(filePath)) {
         const stats = fs.statSync(filePath);
         const content = fs.readFileSync(filePath, "utf-8");
-        return { content, lastModified: stats.mtimeMs };
+        return { content, lastModified: stats.mtimeMs, root };
       }
     }
     return null;
