@@ -88,16 +88,8 @@ export default function TimeIcon({
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      style={{
-        display: "inline-block",
-        verticalAlign: "text-top",
-        position: "relative",
-        top: "-2px",
-      }}
     >
-      <g
-        transform={`rotate(${moonRotation}, 12, 12) scale(1.15) translate(-1.5, -1.5)`}
-      >
+      <g transform={`rotate(${moonRotation}, 12, 12)`}>
         {/* Illuminated portion */}
         <path d={d} fill="#60a5fa" stroke="none" />
       </g>

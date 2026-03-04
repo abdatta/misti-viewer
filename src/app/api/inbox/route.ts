@@ -3,8 +3,11 @@ import { getAllEvents } from "@/lib/sim-reader";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const allEvents = getAllEvents();
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const dateStr = searchParams.get("date");
+
+  const allEvents = getAllEvents(dateStr || undefined);
 
   if (!allEvents || allEvents.length === 0) {
     return NextResponse.json({ items: [] });

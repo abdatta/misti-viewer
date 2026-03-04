@@ -52,6 +52,30 @@ export function getDatesFromFolder(folder: string): string[] {
   }
 }
 
+export function getEventDates(): string[] {
+  try {
+    const datePattern = /^(\d{4}-\d{2}-\d{2})$/;
+    const dateSet = new Set<string>();
+
+    for (const root of getSimRoots()) {
+      const eventsPath = path.join(root, "events");
+      if (!fs.existsSync(eventsPath)) continue;
+      for (const folder of fs.readdirSync(eventsPath)) {
+        const fullPath = path.join(eventsPath, folder);
+        if (fs.statSync(fullPath).isDirectory()) {
+          const match = folder.match(datePattern);
+          if (match) dateSet.add(match[1]);
+        }
+      }
+    }
+
+    return Array.from(dateSet).sort((a, b) => b.localeCompare(a)); // sort descending
+  } catch (error) {
+    console.error("Error reading event dates:", error);
+    return [];
+  }
+}
+
 export function readFileContent(
   folder: string,
   filename: string,
@@ -74,12 +98,13 @@ export function readFileContent(
   }
 }
 
-function collectEventsFromRoot(eventsPath: string): any[] {
+function collectEventsFromRoot(eventsPath: string, targetDate?: string): any[] {
   if (!fs.existsSync(eventsPath)) {
     return [];
   }
 
   const dateFolders = fs.readdirSync(eventsPath).filter((f) => {
+    if (targetDate && f !== targetDate) return false;
     const fullPath = path.join(eventsPath, f);
     return fs.statSync(fullPath).isDirectory() && /^\d{4}-\d{2}-\d{2}$/.test(f);
   });
@@ -129,11 +154,15 @@ function collectEventsFromRoot(eventsPath: string): any[] {
 /**
  * Collects event keys (dateFolder/file) from an events directory.
  */
-function collectEventKeys(eventsPath: string): Set<string> {
+function collectEventKeys(
+  eventsPath: string,
+  targetDate?: string,
+): Set<string> {
   const keys = new Set<string>();
   if (!fs.existsSync(eventsPath)) return keys;
 
   for (const dateFolder of fs.readdirSync(eventsPath)) {
+    if (targetDate && dateFolder !== targetDate) continue;
     const folderFull = path.join(eventsPath, dateFolder);
     if (
       !fs.statSync(folderFull).isDirectory() ||
@@ -149,7 +178,7 @@ function collectEventKeys(eventsPath: string): Set<string> {
   return keys;
 }
 
-export function getAllEvents(): any[] {
+export function getAllEvents(targetDate?: string): any[] {
   try {
     const roots = getSimRoots();
     const allEvents: any[] = [];
@@ -159,7 +188,7 @@ export function getAllEvents(): any[] {
       const eventsPath = path.join(root, "events");
 
       // Collect event keys from this root
-      const currentKeys = collectEventKeys(eventsPath);
+      const currentKeys = collectEventKeys(eventsPath, targetDate);
       const newKeys = new Set<string>();
 
       for (const key of currentKeys) {
@@ -173,7 +202,7 @@ export function getAllEvents(): any[] {
 
       if (roots.indexOf(root) === 0) {
         // Primary root: take everything
-        allEvents.push(...collectEventsFromRoot(eventsPath));
+        allEvents.push(...collectEventsFromRoot(eventsPath, targetDate));
       } else {
         // Fallback root: only read files not seen in higher-priority roots
         const { jsonrepair } = require("jsonrepair");

@@ -63,6 +63,7 @@ function InboxContent() {
   const dateParam = searchParams.get("date");
 
   const [data, setData] = useState<InboxData | null>(null);
+  const [dates, setDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDateStr, setSelectedDateStr] = useState<string>(
     dateParam || format(new Date(), "yyyy-MM-dd"),
@@ -71,7 +72,7 @@ function InboxContent() {
   const fetchInbox = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/inbox");
+      const res = await fetch(`/api/inbox?date=${selectedDateStr}`);
       if (res.ok) {
         const json = await res.json();
         setData(json);
@@ -84,17 +85,18 @@ function InboxContent() {
   };
 
   useEffect(() => {
-    fetchInbox();
+    // Fetch available dates on mount
+    fetch("/api/inbox/dates")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.dates) setDates(json.dates);
+      })
+      .catch(console.error);
   }, []);
 
-  // Compute unique dates from downloaded items
-  const dates = Array.from(
-    new Set(
-      data?.items?.map((item) =>
-        format(new Date(item.timestamp), "yyyy-MM-dd"),
-      ) ?? [],
-    ),
-  ).sort((a, b) => b.localeCompare(a)); // sort descending
+  useEffect(() => {
+    fetchInbox();
+  }, [selectedDateStr]);
 
   const handleDateChange = (newDate: string) => {
     setSelectedDateStr(newDate);
@@ -153,11 +155,7 @@ function InboxContent() {
     if (nextDateToNavigate) handleDateChange(nextDateToNavigate);
   };
 
-  const filteredItems =
-    data?.items?.filter(
-      (item) =>
-        format(new Date(item.timestamp), "yyyy-MM-dd") === selectedDateStr,
-    ) || [];
+  const filteredItems = data?.items || [];
 
   return (
     <div className="animate-fade-in">
