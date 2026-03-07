@@ -134,14 +134,18 @@ function DiaryContent() {
   }, [selectedDate]);
 
   useEffect(() => {
-    const handleMouseUp = () => {
-      setTimeout(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const handleSelectionChange = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
         if (document.getElementById("note-dialog")) {
           return; // Do not alter selection state while dialog is open and user is typing
         }
 
         const selection = window.getSelection();
         if (!selection || selection.isCollapsed) {
+          // Verify we aren't incorrectly wiping it when a dialog opening is in progress
           setSelectedText("");
           setSelectedChunkIndex(null);
           return;
@@ -174,11 +178,17 @@ function DiaryContent() {
           setSelectedText("");
           setSelectedChunkIndex(null);
         }
-      }, 50);
+      }, 150);
     };
 
-    document.addEventListener("mouseup", handleMouseUp);
-    return () => document.removeEventListener("mouseup", handleMouseUp);
+    document.addEventListener("selectionchange", handleSelectionChange);
+    document.addEventListener("touchend", handleSelectionChange);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("selectionchange", handleSelectionChange);
+      document.removeEventListener("touchend", handleSelectionChange);
+    };
   }, []);
 
   const handleSaveNote = async (content: string) => {
