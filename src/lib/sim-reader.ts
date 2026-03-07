@@ -80,7 +80,12 @@ export function readFileContent(
   folder: string,
   filename: string,
   specificRoot?: string,
-): { content: string; lastModified: number; root: string } | null {
+): {
+  content: string;
+  lastModified: number;
+  root: string;
+  sourcePath: string;
+} | null {
   try {
     const rootsToSearch = specificRoot ? [specificRoot] : getSimRoots();
     for (const root of rootsToSearch) {
@@ -88,7 +93,12 @@ export function readFileContent(
       if (fs.existsSync(filePath)) {
         const stats = fs.statSync(filePath);
         const content = fs.readFileSync(filePath, "utf-8");
-        return { content, lastModified: stats.mtimeMs, root };
+        return {
+          content,
+          lastModified: stats.mtimeMs,
+          root,
+          sourcePath: filePath,
+        };
       }
     }
     return null;

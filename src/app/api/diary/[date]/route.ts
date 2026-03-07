@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readFileContent } from "@/lib/sim-reader";
+import crypto from "crypto";
 
 export async function GET(
   request: Request,
@@ -56,9 +57,24 @@ export async function GET(
   // Sort reverse chronologically (latest hour at the top)
   const sortedChunks = cleanedChunks.reverse();
 
+  // Compute version hash for each chunk
+  const chunksWithVersion = sortedChunks.map((chunk) => {
+    const chunkHash = crypto
+      .createHash("sha256")
+      .update(chunk.markdownText)
+      .digest("hex");
+    const versionString = `${fileData.sourcePath}|${fileData.lastModified}|${chunkHash}`;
+    const version = crypto
+      .createHash("md5")
+      .update(versionString)
+      .digest("hex");
+    return { ...chunk, currentVersion: version };
+  });
+
   return NextResponse.json({
     date,
     lastModified: fileData.lastModified,
-    chunks: sortedChunks,
+    sourcePath: fileData.sourcePath,
+    chunks: chunksWithVersion,
   });
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { marked } from "marked";
 
-export default function MarkdownRenderer({ content }: { content: string }) {
+const MarkdownRenderer = React.memo(({ content }: { content: string }) => {
   const [html, setHtml] = useState<string>("");
 
   useEffect(() => {
@@ -18,4 +18,8 @@ export default function MarkdownRenderer({ content }: { content: string }) {
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
-}
+});
+
+MarkdownRenderer.displayName = "MarkdownRenderer";
+
+export default MarkdownRenderer;

@@ -20,6 +20,9 @@
 # production
 /build
 
+# storage
+/diary_notes/
+
 # misc
 .DS_Store
 *.pem
