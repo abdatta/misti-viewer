@@ -51,7 +51,6 @@ function DiaryContent() {
 
   // Note specific states
   const [notes, setNotes] = useState<Note[]>([]);
-  const [sourcePath, setSourcePath] = useState("");
   const [lastModified, setLastModified] = useState(0);
   const [selectedText, setSelectedText] = useState("");
   const [selectedChunkIndex, setSelectedChunkIndex] = useState<number | null>(
@@ -92,11 +91,9 @@ function DiaryContent() {
       if (res.ok) {
         const data = await res.json();
         setChunks(data.chunks || []);
-        setSourcePath(data.sourcePath || "");
         setLastModified(data.lastModified || 0);
       } else {
         setChunks([]);
-        setSourcePath("");
         setLastModified(0);
       }
     } catch (err) {
@@ -204,7 +201,6 @@ function DiaryContent() {
           timeLabel: chunk.timeLabel,
           selectedText,
           content,
-          sourcePath,
           lastModified,
           chunkText: chunk.markdownText,
         }),
@@ -469,7 +465,11 @@ function DiaryContent() {
                     position: "relative",
                   }}
                 >
-                  <MarkdownRenderer content={chunk.markdownText} />
+                  <MarkdownRenderer
+                    content={chunk.markdownText}
+                    notes={chunkNotes}
+                    currentVersion={chunk.currentVersion}
+                  />
 
                   {!isExpanded && (
                     <div

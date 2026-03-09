@@ -12,7 +12,6 @@ export interface Note {
   content: string;
   version: string;
   versionPayload: {
-    sourcePath: string;
     lastModified: number;
     chunkHash: string;
   };
@@ -57,22 +56,14 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const {
-      date,
-      timeLabel,
-      selectedText,
-      content,
-      sourcePath,
-      lastModified,
-      chunkText,
-    } = body;
+    const { date, timeLabel, selectedText, content, lastModified, chunkText } =
+      body;
 
     if (
       !date ||
       !timeLabel ||
       !selectedText ||
       !content ||
-      !sourcePath ||
       !lastModified ||
       !chunkText
     ) {
@@ -89,7 +80,7 @@ export async function POST(request: Request) {
       .createHash("sha256")
       .update(chunkText)
       .digest("hex");
-    const versionString = `${sourcePath}|${lastModified}|${chunkHash}`;
+    const versionString = `${lastModified}|${chunkHash}`;
     const version = crypto
       .createHash("md5")
       .update(versionString)
@@ -102,7 +93,6 @@ export async function POST(request: Request) {
       content,
       version,
       versionPayload: {
-        sourcePath,
         lastModified,
         chunkHash,
       },

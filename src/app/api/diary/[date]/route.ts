@@ -63,7 +63,7 @@ export async function GET(
       .createHash("sha256")
       .update(chunk.markdownText)
       .digest("hex");
-    const versionString = `${fileData.sourcePath}|${fileData.lastModified}|${chunkHash}`;
+    const versionString = `${fileData.lastModified}|${chunkHash}`;
     const version = crypto
       .createHash("md5")
       .update(versionString)
@@ -74,7 +74,6 @@ export async function GET(
   return NextResponse.json({
     date,
     lastModified: fileData.lastModified,
-    sourcePath: fileData.sourcePath,
     chunks: chunksWithVersion,
   });
 }
