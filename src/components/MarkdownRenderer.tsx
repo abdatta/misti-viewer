@@ -17,10 +17,16 @@ interface MarkdownRendererProps {
   content: string;
   notes?: Note[];
   currentVersion?: string;
+  disableProseLayout?: boolean;
 }
 
 const MarkdownRenderer = React.memo(
-  ({ content, notes = [], currentVersion }: MarkdownRendererProps) => {
+  ({
+    content,
+    notes = [],
+    currentVersion,
+    disableProseLayout = false,
+  }: MarkdownRendererProps) => {
     const [html, setHtml] = useState<string>("");
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -32,9 +38,58 @@ const MarkdownRenderer = React.memo(
     } | null>(null);
     const floatieRef = useRef<HTMLDivElement>(null);
 
+    // Pre-process markdown to handle non-standard patterns from notes
+    const preprocessMarkdown = (md: string): string => {
+      return md
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .split("\n")
+        .map((line) => {
+          const trimmed = line.trimStart();
+          const indent = line.slice(0, line.length - trimmed.length);
+
+          // Already a proper list item — skip
+          if (/^[-+]\s/.test(trimmed) || /^\d+\.\s/.test(trimmed)) {
+            return line;
+          }
+
+          // Pattern 1: ~~[x] text~~ trailing   or  ~~[ ] text~~ trailing
+          // Strikethrough means completed — always render as checked
+          const strikeCheckbox = trimmed.match(
+            /^~~\[([x \-])\]\s*(.*?)~~(.*)$/i,
+          );
+          if (strikeCheckbox) {
+            const [, , innerText, trailing] = strikeCheckbox;
+            return `${indent}- [x] ~~${innerText}~~${trailing}`;
+          }
+
+          // Pattern 2: [x] text  or  [ ] text  or  [-] text  (bare, no strikethrough)
+          const bareCheckbox = trimmed.match(/^\[([x \-])\]\s*(.*)/i);
+          if (bareCheckbox) {
+            const [, check, rest] = bareCheckbox;
+            const isChecked = check.toLowerCase() === "x" || check === "-";
+            return `${indent}- [${isChecked ? "x" : " "}] ${rest}`;
+          }
+
+          // Pattern 3: *Text (asterisk used as bullet without space)
+          // Must not match *text* (italic) or ** (bold) or * alone
+          if (/^\*[^\s*]/.test(trimmed)) {
+            return `${indent}- ${trimmed.slice(1)}`;
+          }
+
+          return line;
+        })
+        .join("\n");
+    };
+
     // Initial HTML rendering and text highlighting
     useEffect(() => {
-      const rawHtml = marked.parse(content, { async: false }) as string;
+      const processed = preprocessMarkdown(content);
+      const rawHtml = marked.parse(processed, {
+        async: false,
+        breaks: true,
+        gfm: true,
+      }) as string;
       const parser = new DOMParser();
       const doc = parser.parseFromString(rawHtml, "text/html");
 
@@ -242,7 +297,7 @@ const MarkdownRenderer = React.memo(
       <div style={{ position: "relative" }}>
         <div
           ref={containerRef}
-          className="prose animate-fade-in"
+          className={`${disableProseLayout ? "" : "prose"} animate-fade-in`}
           dangerouslySetInnerHTML={{ __html: html }}
           onClick={handleContainerClick}
         />

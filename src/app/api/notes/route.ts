@@ -1,28 +1,8 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { readFileContent } from "@/lib/sim-reader";
 import crypto from "crypto";
 
-const NOTES_DIR = path.join(process.cwd(), "diary_notes");
-
-export interface Note {
-  id: string;
-  timeLabel: string;
-  selectedText: string;
-  content: string;
-  version: string;
-  versionPayload: {
-    lastModified: number;
-    chunkHash: string;
-  };
-  createdAt: string;
-}
-
-function ensureNotesDir() {
-  if (!fs.existsSync(NOTES_DIR)) {
-    fs.mkdirSync(NOTES_DIR, { recursive: true });
-  }
-}
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -30,129 +10,40 @@ export async function GET(request: Request) {
 
   if (!date) {
     return NextResponse.json(
-      { error: "Missing date parameter" },
+      { error: "Date parameter is required" },
       { status: 400 },
     );
   }
 
-  const filePath = path.join(NOTES_DIR, `${date}.json`);
-  if (!fs.existsSync(filePath)) {
-    return NextResponse.json({ notes: [] });
+  let rootToUse: string | undefined = undefined;
+
+  // --- Fallback feature ---
+  // If fallback is enabled, find which root the selected date's diary entry belongs to
+  if (process.env.USE_SIM_FALLBACKS !== "false") {
+    const diaryData = readFileContent("diary", `${date}.md`);
+    if (diaryData) {
+      rootToUse = diaryData.root;
+    }
+  }
+  // --- End fallback feature ---
+
+  const fileData = readFileContent("notes", `${date}.md`, rootToUse);
+
+  if (!fileData) {
+    return NextResponse.json({ error: "Notes not found" }, { status: 404 });
   }
 
-  try {
-    const data = fs.readFileSync(filePath, "utf-8");
-    const notes: Note[] = JSON.parse(data);
-    return NextResponse.json({ notes });
-  } catch (error) {
-    console.error(`Error reading notes for ${date}:`, error);
-    return NextResponse.json(
-      { error: "Failed to read notes" },
-      { status: 500 },
-    );
-  }
-}
+  const chunkHash = crypto
+    .createHash("sha256")
+    .update(fileData.content)
+    .digest("hex");
+  const versionString = `${fileData.lastModified}|${chunkHash}`;
+  const version = crypto.createHash("md5").update(versionString).digest("hex");
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { date, timeLabel, selectedText, content, lastModified, chunkText } =
-      body;
-
-    if (
-      !date ||
-      !timeLabel ||
-      !selectedText ||
-      !content ||
-      !lastModified ||
-      !chunkText
-    ) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
-    }
-
-    ensureNotesDir();
-
-    // Create a stable version identifier by hashing the combination of path, time, and content
-    const chunkHash = crypto
-      .createHash("sha256")
-      .update(chunkText)
-      .digest("hex");
-    const versionString = `${lastModified}|${chunkHash}`;
-    const version = crypto
-      .createHash("md5")
-      .update(versionString)
-      .digest("hex");
-
-    const newNote: Note = {
-      id: crypto.randomUUID(),
-      timeLabel,
-      selectedText,
-      content,
-      version,
-      versionPayload: {
-        lastModified,
-        chunkHash,
-      },
-      createdAt: new Date().toISOString(),
-    };
-
-    const filePath = path.join(NOTES_DIR, `${date}.json`);
-    let notes: Note[] = [];
-
-    if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath, "utf-8");
-      notes = JSON.parse(data);
-    }
-
-    notes.push(newNote);
-    fs.writeFileSync(filePath, JSON.stringify(notes, null, 2));
-
-    return NextResponse.json({ success: true, note: newNote });
-  } catch (error) {
-    console.error("Error saving note:", error);
-    return NextResponse.json({ error: "Failed to save note" }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const date = searchParams.get("date");
-    const id = searchParams.get("id");
-
-    if (!date || !id) {
-      return NextResponse.json(
-        { error: "Missing date or id parameter" },
-        { status: 400 },
-      );
-    }
-
-    const filePath = path.join(NOTES_DIR, `${date}.json`);
-    if (!fs.existsSync(filePath)) {
-      return NextResponse.json({ error: "Note not found" }, { status: 404 });
-    }
-
-    const data = fs.readFileSync(filePath, "utf-8");
-    let notes: Note[] = JSON.parse(data);
-    const initialLength = notes.length;
-
-    notes = notes.filter((note) => note.id !== id);
-
-    if (notes.length === initialLength) {
-      return NextResponse.json({ error: "Note not found" }, { status: 404 });
-    }
-
-    fs.writeFileSync(filePath, JSON.stringify(notes, null, 2));
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting note:", error);
-    return NextResponse.json(
-      { error: "Failed to delete note" },
-      { status: 500 },
-    );
-  }
+  return NextResponse.json({
+    date,
+    lastModified: fileData.lastModified,
+    content: fileData.content,
+    currentVersion: version,
+  });
 }

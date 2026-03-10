@@ -64,8 +64,20 @@ export async function GET(request: Request) {
       });
     }
 
+    // Parse the human-readable date (e.g. "Jan 16, 2026 (Fri, LA)") to yyyy-MM-dd
+    let todayDateISO: string | undefined;
+    if (plan.today?.date) {
+      // Extract just the date part before any parenthetical
+      const dateStr = plan.today.date.replace(/\s*\(.*\)\s*$/, "").trim();
+      const parsed = new Date(dateStr);
+      if (!isNaN(parsed.getTime())) {
+        todayDateISO = parsed.toISOString().split("T")[0];
+      }
+    }
+
     return NextResponse.json({
       lastModified: fileData.lastModified,
+      todayDate: todayDateISO,
       chunks: chunks,
     });
   } catch (error) {

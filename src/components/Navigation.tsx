@@ -6,9 +6,9 @@ import { Suspense } from "react";
 import {
   BookOpen,
   Receipt,
-  CalendarCheck,
   Inbox as InboxIcon,
   Settings,
+  ScrollText,
 } from "lucide-react";
 
 function NavigationContent() {
@@ -21,7 +21,7 @@ function NavigationContent() {
     { name: "Diary", href: "/diary", icon: BookOpen },
     { name: "Inbox", href: "/inbox", icon: InboxIcon },
     { name: "Money", href: "/money", icon: Receipt },
-    { name: "Plan", href: "/plan", icon: CalendarCheck },
+    { name: "Notes", href: "/notes", icon: ScrollText },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 
